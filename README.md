@@ -84,6 +84,6 @@ Feel free to fork the repository and submit pull requests. We welcome improvemen
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contact
-For questions or feedback, please contact [Pravashpvsh(mailto:pokhrelpravash90@gmail.com).
+For questions or feedback, please contact [Pravashpvsh](mailto:pokhrelpravash90@gmail.com).
 
 ---
