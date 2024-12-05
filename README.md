@@ -34,7 +34,7 @@ Manual monitoring of environmental variables such as soil moisture, humidity, te
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/automated-farm-monitoring.git
+   git clone https://github.com/Pravashpvsh/Automated-Farm-Field-Monitoring-and-Control-via-Web-Interface.git
    ```
 
 2. **Set up the hardware**:
