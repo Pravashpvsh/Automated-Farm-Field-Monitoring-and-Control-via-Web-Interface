@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Soil Moisture Monitoring</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+   body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      display: flex;
+      justify-content: flex-end; /* Moves content horizontally to the right */
+      align-items: flex-start; /* Moves content vertically to the top */
+      position: absolute;
+      width: 100%;
+      top: 0; /* Positions content at the top */
+      right: 0; /* Ensures alignment to the right */
+    }
+
+    .animated-title {
+      font-size: 32px;
+      font-weight: bold;
+      text-align: center;
+      color: #269328;
+      margin: 0;
+      padding: 20px;
+      width: 100%;
+      animation: fadeInMoveDown 2s ease-in-out;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      position: fixed; 
+      top: 0; 
+      z-index: 10;
+    }
+
+    @keyframes fadeInMoveDown {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin: 80px 20px 20px 20px; /* Added margin-top to prevent overlap with title */
+      padding: 20px;
+      border: 2px solid black;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      width: fit-content;
+    }
+
+    #chartContainer {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 10px;
+      z-index: 10;
+    }
+
+    #chart {
+      width: 330px !important;
+      height: 140px !important;
+    }
+
+    #statusContainer {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      margin-top: 1px;
+      width: 100%;
+      border-top: 2px solid black;
+      padding: 10px;
+      background-color: #e9e9e9;
+    }
+
+    #soilMoisture, #servoStatus, #ledStatus {
+      font-size: 24px;
+      margin-right: 20px;
+    }
+  </style>
+  <script>
+    let soilMoistureData = [];
+    let labels = [];
+    let lastAlert = null;
+
+    // Function to fetch and update soil moisture value
+    function fetchData() {
+      fetch('/data')
+        .then(response => response.text())
+        .then(data => {
+          const value = parseInt(data);
+          const timestamp = new Date().toLocaleTimeString();
+
+          // Map soil moisture value to percentage
+          const percentage = mapToPercentage(value);
+
+          // Update chart data
+          soilMoistureData.push(percentage);
+          labels.push(timestamp);
+
+          if (soilMoistureData.length > 20) {
+            soilMoistureData.shift(); // Keep only last 20 points
+            labels.shift();
+          }
+
+          // Update chart
+          chart.update();
+
+          // Update displayed value (show percentage, not raw value)
+          document.getElementById('soilMoisture').innerText = percentage + '%';
+
+          // Update servo status and LED indicator status
+          if (percentage === 0) {
+            document.getElementById('servoStatus').innerText = 'Servo at 60°';
+            document.getElementById('ledStatus').innerText = 'LED ON';
+          } else {
+            document.getElementById('servoStatus').innerText = 'Servo at 90°';
+            document.getElementById('ledStatus').innerText = 'LED OFF';
+          }
+        });
+    }
+
+    // Map raw value to percentage
+    function mapToPercentage(value) {
+      if (value >= 4000) return 0;
+      if (value >= 3000) return 20;
+      if (value >= 2000) return 40;
+      if (value >= 1000) return 60;
+      return 100;
+    }
+
+    // Initialize the chart
+    let ctx;
+    let chart;
+    window.onload = () => {
+      ctx = document.getElementById('chart').getContext('2d');
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Soil Moisture',
+            data: soilMoistureData,
+            borderColor: 'blue',
+            backgroundColor: 'rgba(0, 0, 255, 0.1)',
+            borderWidth: 2,
+            fill: true,
+          }]
+        },
+        options: {
+          responsive: false, 
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Time',
+              },
+              ticks: {
+                font: {
+                  size: 10 
+                }
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Moisture Percentage',
+              },
+              min: 0,
+              max: 100,
+              ticks: {
+                stepSize: 20,
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+
+      // Start fetching data every second
+      setInterval(fetchData, 1000);
+    };
+  </script>
+</head>
+<body>
+  <div class="animated-title">Automated Farm Field Controlling and Monitoring</div>
+  <div id="container">
+    <h2>Soil Moisture Farm 1</h2>
+    <div id="chartContainer">
+      <canvas id="chart" width="300" height="200"></canvas>
+    </div>
+    <div id="statusContainer">
+      <div id="soilMoisture">Loading...</div>
+      <div id="servoStatus">Servo at 90°</div>
+      <div id="ledStatus">LED OFF</div>
+    </div>
+  </div>
+</body>
+</html>
